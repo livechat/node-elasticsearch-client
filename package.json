@@ -2,7 +2,8 @@
     "author": "Phillip Rosen <phill.rosen@gmail.com>",
     "name": "elasticsearchclient",
     "description": "A client for Elastic Search",
-    "version": "0.2.1",
+    "keywords": ["elasticsearch", "elastic", "search", "client"],
+    "version": "0.4.0",
     "repository": {
         "url": ""
     },
@@ -12,7 +13,7 @@
     },
     "dependencies": {},
     "devDependencies": {
-            "mocha": "1.3.0"
+            "mocha": "1.7.4"
         ,   "chai": "*"
         },
     "repository": {
@@ -20,6 +21,7 @@
         "url": "git://github.com/phillro/node-elasticsearch-client.git"
     },
     "scripts": {
-        "test": "./node_modules/.bin/mocha"
+        "test": "make test",
+        "coverage": "make test-cov --no-print-directory"
     }
 }

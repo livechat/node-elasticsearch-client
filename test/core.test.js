@@ -1,5 +1,4 @@
-var ElasticSearchClient = require('../lib/elasticsearchclient/elasticSearchClient.js')
-,   mocha = require("mocha")
+var ElasticSearchClient = require('..')
 ,   should = require("chai").should();
 
 var serverOptions = {
@@ -23,7 +22,7 @@ describe("ElasticSearchClient Core api", function(){
         /*
         *   To allow running tests individually `mocha --grep search`
         */
-        elasticSearchClient.index(indexName, objName, {'name':'sushi', id: 'sushi'})
+        elasticSearchClient.index(indexName, objName, {'name':'sushi'}, "sushi")
             .on('data', function(){
                 done();
             })
@@ -42,13 +41,31 @@ describe("ElasticSearchClient Core api", function(){
         })
 
         it("should index an object with given id under the same id", function(done){
-            elasticSearchClient.index(indexName, objName, {'name':'name', id:"1111"})
+            elasticSearchClient.index(indexName, objName, {'name':'name', id:"9999"}, "1111")
                 .on('data', function(data) {
                     data = JSON.parse(data);
                     data._id.should.equal("1111");
                     done();
                 })
                 .exec();
+        });
+    });
+
+    describe("#index canonical", function(){
+        it("should index a json object", function(done){
+            elasticSearchClient.index(indexName, objName, {'name':'sushi'}, function(err,data){
+                data = JSON.parse(data);
+                data.ok.should.be.ok;
+                done();
+            })
+        })
+
+        it("should index an object with given id under the same id", function(done){
+            elasticSearchClient.index(indexName, objName, {'name':'name', id:"9999"}, "1111", function(err,data){
+                data = JSON.parse(data);
+                data._id.should.equal("1111");
+                done();
+            })
         });
     });
 
@@ -65,6 +82,44 @@ describe("ElasticSearchClient Core api", function(){
             })
             .exec()
         });
+    });
+
+    describe("#get canonical", function(){
+        it("should fetch the row by id", function(done){
+            elasticSearchClient.get(indexName, objName, "sushi", function(err,data){
+                data = JSON.parse(data);
+                data.exists.should.exist;
+                data._id.should.equal("sushi");
+                data._source.should.be.ok;
+                done();
+            })
+        });
+    });
+
+    describe("#update", function(){
+        it("should update the existing doc by id", function(done){
+            elasticSearchClient.update(indexName, objName, "sushi", {doc:{occupation: "play"}})
+            .on('data', function(data) {
+                data = JSON.parse(data);
+                data.should.be.ok;
+                data._id.should.equal("sushi");
+                done();
+            })
+            .exec()
+        });
+
+    });
+
+    describe("#update canonical", function(){
+        it("should update the existing doc by id", function(done){
+            elasticSearchClient.update(indexName, objName, "sushi", {doc:{occupation: "play"}}, function(err,data){
+                data = JSON.parse(data);
+                data.should.be.ok;
+                data._id.should.equal("sushi");
+                done();
+            })
+        });
+
     });
 
     describe("#search", function(){
@@ -114,6 +169,50 @@ describe("ElasticSearchClient Core api", function(){
                     done();
                 })
                 .exec();
+        });
+    });
+
+    describe("#search canonical", function(){
+        it("should search based on given query", function(done){
+            var qryObj = {
+                "query" : {
+                    "term" : { "name" : "sushi" }
+                }
+            };
+            elasticSearchClient.search(indexName, objName, qryObj, function(err,data){
+                data = JSON.parse(data);
+                data.should.not.be.undefined.null.empty;
+                data.hits.total.should.be.gte(0);
+                done();
+            })
+        });
+
+        it("should search even if collection name not present", function(done){
+            var qryObj = {
+                "query" : {
+                    "term" : { "name" : "sushi" }
+                }
+            };
+            elasticSearchClient.search(indexName, qryObj, function(err,data){
+                data = JSON.parse(data);
+                data.should.not.be.undefined.null.empty;
+                data.hits.total.should.be.gte(0);
+                done();
+            })
+        });
+
+        it("should search even if index_name is not present", function(done){
+            var qryObj = {
+                "query" : {
+                    "term" : { "name" : "sushi" }
+                }
+            };
+            elasticSearchClient.search(qryObj, function(err, data){
+                data = JSON.parse(data);
+                data.should.not.be.undefined.null.empty;
+                data.hits.total.should.be.at.least(0);
+                done();
+            })
         });
     });
 
@@ -171,7 +270,6 @@ describe("ElasticSearchClient Core api", function(){
             var qryStr = 'name:name'
             elasticSearchClient.count(indexName, objName, qryStr)
                 .on('data', function(data) {
-                    
                     data = JSON.parse(data);
                     data.count.should.exist;
                     data.count.should.not.be.null.undefined;

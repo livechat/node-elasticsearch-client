@@ -18,8 +18,11 @@ ElasticSearchClient = require('elasticsearchclient');
 var serverOptions = {
     host: 'localhost',
     port: 9200,
+    pathPrefix:'optional pathPrefix',
+    secure: true||false
 };
 ```
+
 
 OR specify multiple hosts
 
@@ -41,22 +44,40 @@ var qryObj = {
 }
 
 elasticSearchClient.search('my_index_name', 'my_type_name', qryObj)
-            .on('data', function(data) {
-                console.log(JSON.parse(data))
-            })
-            .on('done', function(){
-                //always returns 0 right now
-            })
-            .on('error', function(error){
-                console.log(error)
-            })
-            .exec()
+    .on('data', function(data) {
+        console.log(JSON.parse(data))
+    })
+    .on('done', function(){
+        //always returns 0 right now
+    })
+    .on('error', function(error){
+        console.log(error)
+    })
+    .exec()
 
-elasticSearchClient.index('my_index_name', 'my_type_name', {'name':'name', id:"1111"})
-            .on('data', function(data) {
-                console.log(data)
-            })
-            .exec()
+//Canonical search
+ elasticSearchClient.search('my_index_name', 'my_type_name', qryObj, function(err, data){
+    console.log(JSON.parse(data))
+ })
+
+//Search call as a reusable object with a canonical callback
+mySearchCall = elasticSearchClient.search('my_index_name', 'my_type_name', qryObj);
+//Do it once
+mySearchCall.exec(function(err, data){
+    console.log(JSON.parse(data))
+})
+//Do it twice
+mySearchCall.exec(function(err, data){
+    console.log(JSON.parse(data))
+})
+
+
+
+elasticSearchClient.index(indexName, typeName, document, id, options)
+    .on('data', function(data) {
+        console.log(data)
+    })
+    .exec()
 
 //Bulk index example
 var commands = []
@@ -88,6 +109,13 @@ elasticSearchClient.createOrModifyTwitterRiver(riverName, riverData)
         assert.ok(false)
     }).exec()
 ```
+## Code coverage
+
+Run code coverage by executing:
+
+	$npm run-script coverage
+
+*Requires [visionmedia/jscoverage](https://github.com/visionmedia/node-jscoverage)
 
 ## What can i do?
 
